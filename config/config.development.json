@@ -1,0 +1,26 @@
+{
+    "port": "4000",
+    "static_variable": "static",
+    "pusher": {
+        "appId": "555421",
+        "key": "2bae7f804ef1483a7795",
+        "secret": "6fb52823189341c662a5"
+    },
+    "facebook": {
+        "appId": "555421",
+        "secret": "6fb52823189341c662a5"
+    },
+    "db": {
+        "db": "magitoapi",
+        "port": 20731,
+        "server": "localhost"
+    },
+    "account": {
+        "trial_duration": "30",
+        "host_price": 200,
+        "worker_price": 100
+    },
+    "duration": "30,45,60,75,80",
+    "skill": "foot,body,washing,room",
+    "cancel_threshold": "10",
+}
