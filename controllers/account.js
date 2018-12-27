@@ -10,10 +10,10 @@ var Session = require('../models/session');
 const perPage = 10;
 
 // exports.auth = async (req, h) => {
-// 	// const accesstoken='EMAWfI9fg2QkVI03ftjFrojvX1clbNLe5ZAAjZCrVpN3w1VABLxucxoZAvnK5WXC5hSkZBeYk5zFJU8ikqC2fOUAL6b12ohj0SzyjUboDmIAZDZD';
-// 	// var accesstoken = req.query.accesstoken;
+// 	const accesstoken='EMAWfI9fg2QkVI03ftjFrojvX1clbNLe5ZAAjZCrVpN3w1VABLxucxoZAvnK5WXC5hSkZBeYk5zFJU8ikqC2fOUAL6b12ohj0SzyjUboDmIAZDZD';
+// 	var accesstoken = req.query.accesstoken;
 // 	return new Promise((resolve, reject) => {
-// 		// return request('https://graph.accountkit.com/v1.0/me/?access_token=' + accesstoken, function (error, response, body) {
+// 		return request('https://graph.accountkit.com/v1.0/me/?access_token=' + accesstoken, function (error, response, body) {
 // 			if (error) {
 // 				return reject(Boom.unauthorized('facebook down'));
 // 			}
@@ -44,9 +44,10 @@ const perPage = 10;
 // 			});
 // 		}).catch((err) => {
 // 			return reply(Boom.badImplementation());
-// 			// return reject(Boom.boomify(err, { statusCode: 422 }));
+// 			return reject(Boom.boomify(err, { statusCode: 422 }));
 // 		});
 // 		}
+// 	});
 // 	});
 // }
 
@@ -59,11 +60,14 @@ exports.login = (req, h) => {
 		if (!Bcrypt.compareSync(req.payload.password, account.password)) {
 			return Boom.badData('Invalid password');
 		}
+		if (account.state != 'enabled') {
+			return Boom.unauthorized('User is blocked or not actived');
+		}
 		//luu session
 		var user = new User(account);
 		console.log(user);
 		return user.generate_session();
-
+		
 
 
 	}).catch((err) => {
@@ -99,9 +103,13 @@ exports.list = (req, h) => {
  * Get Account by ID
  */
 exports.get = (req, h) => {
-	return Account.findById(req.params.id).exec().then((account) => {
+	return Account.findById(req.params.id).populate('favorite').populate('blacklist').lean().exec().then((account) => {
 		if (!account) return { message: 'Account not Found' };
 		return account;
+	}).then(account => {
+		return Session.findOne({ user_id: account._id }).exec().then(session => {
+			return { account: account, sessionid: session._id };
+		})
 	}).catch((err) => {
 
 		return Boom.boomify(err, { statusCode: 422 });
@@ -166,6 +174,10 @@ exports.add = (req, h) => {
  * thu2603
  */
 exports.create = (req, h) => {
+
+	if (req.payload.type == 'admin' && !req.payload.password) {
+		return Boom.badData('Password is required');
+	}
 	var user = new User();
 	return user.create(req.payload).then((account) => {
 
@@ -177,19 +189,6 @@ exports.create = (req, h) => {
 
 	});
 }
-
-//login by session
-exports.auth = (req, h) => {
-	var user = new User()
-	return user.load_user_from_session(req.headers.sessionid).then((account) => {
-		return account;
-	}).catch((err) => {
-		return Boom.boomify(err, { statusCode: 401 });
-	})
-}
-
-
-
 //upload avatar
 exports.upload = (req, h) => {
 	var URL = require('../classes/helper').getRootUrl();
@@ -241,9 +240,14 @@ exports.upload = (req, h) => {
  */
 exports.update = (req, h) => {
 	var data = req.payload;
-
-	var user_id = req.auth.credentials.user._id;
-
+	if (req.auth.credentials.user.type == 'admin') {
+		var user_id = req.params.id;
+	} else {
+		if (data.type == 'admin') {
+			throw Boom.badData('Invalid user type');
+		}
+		var user_id = req.auth.credentials.user._id;
+	}
 	return Account.findById(user_id).exec().then((account) => {
 
 		if (!account) throw Boom.badData('Account not found');

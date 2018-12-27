@@ -5,14 +5,15 @@ module.exports = [{
   method: 'GET',
   path: '/accounts',
   config: {
-    auth: false
+    auth: {
+      scope: ['admin', 'host', 'worker']
+    },
   },
   handler: AccountController.list
 },
 {
   method: 'GET',
   path: '/account/{id}',
-  
   handler: AccountController.get
 },
 
@@ -66,14 +67,14 @@ module.exports = [{
   },
   handler: AccountController.login
 },
-{
-  method: 'GET',
-  path: '/auth',
-  config: {
-    auth: false
-  },
-  handler: AccountController.auth
-},
+// {
+//   method: 'GET',
+//   path: '/auth',
+//   config: {
+//     auth: false
+//   },
+//   handler: AccountController.auth
+// },
 
 {
   method: 'POST',
@@ -86,7 +87,11 @@ module.exports = [{
 {
   method: 'PUT',
   path: '/account/{id}',
-  
+  config: {
+    auth: {
+      scope: ['admin', 'host', 'worker']
+    },
+  },
   handler: AccountController.update
 },
 // {
@@ -103,7 +108,9 @@ module.exports = [{
   method: 'DELETE',
   path: '/account/{id}',
   config: {
-    auth: false
+    auth: {
+      scope: ['admin']
+    },
   },
   handler: AccountController.remove
 },
@@ -116,9 +123,6 @@ module.exports = [{
 {
   method: 'GET',
   path: '/accounts/search',
-  config: {
-    auth: false
-  },
   handler: AccountController.search,
 },
 // {
