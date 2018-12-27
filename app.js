@@ -85,6 +85,7 @@ const scheme = function (server, options) {
             }
         },
         authenticate: function (request, h) {
+            console.log("aaaaaaaaaaa")
             var Boom=  require('boom');
             const session_id = request.headers.sessionid;
             
@@ -94,10 +95,10 @@ const scheme = function (server, options) {
             var User = require('./classes/user');
             var account = new User();
             return account.load_user_from_session(session_id).then((acc)=>{
-                // console.log(acc);
-                return h.authenticated({ credentials: { user:acc,scope:[acc.type] } });
+                console.log(acc);
+                return h.authenticated({ credentials: { user:acc } });
             }).catch((err) => {
-                // console.log(err);
+                console.log(err);
                 return Boom.boomify(err,{statusCode:401});
             });
         }
